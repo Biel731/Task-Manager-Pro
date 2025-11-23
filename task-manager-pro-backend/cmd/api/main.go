@@ -8,6 +8,7 @@ import (
 	"github.com/bielrodrigues/task-manager-pro-backend/internal/config"
 	"github.com/bielrodrigues/task-manager-pro-backend/internal/database"
 	"github.com/bielrodrigues/task-manager-pro-backend/internal/http"
+	"github.com/bielrodrigues/task-manager-pro-backend/internal/users"
 )
 
 func main() {
@@ -20,12 +21,15 @@ func main() {
 	// Connect to Redis
 	database.ConnectRedis()
 
+	// Migrate User
+	users.Migrate()
+
 	// Create Gin router
 	r := gin.Default()
 
 	// Register routes
 	http.RegisterRoutes(r)
 
-	log.Println("🚀 Server running at http://localhost:8080")
+	log.Println("\r\n🚀 Server running at http://localhost:8080")
 	r.Run(":8080")
 }
