@@ -2,6 +2,8 @@ package http
 
 import (
 	"github.com/gin-gonic/gin"
+
+	"github.com/bielrodrigues/task-manager-pro-backend/internal/users"
 )
 
 func RegisterRoutes(r *gin.Engine) {
@@ -12,4 +14,8 @@ func RegisterRoutes(r *gin.Engine) {
 			"status": "ok",
 		})
 	})
+
+	// AUTH
+	api.POST("/auth/register", users.RegisterHandler)
+	api.POST("/auth/login", users.LoginHandler)
 }
