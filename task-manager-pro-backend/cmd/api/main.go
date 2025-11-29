@@ -8,6 +8,7 @@ import (
 	"github.com/bielrodrigues/task-manager-pro-backend/internal/config"
 	"github.com/bielrodrigues/task-manager-pro-backend/internal/database"
 	"github.com/bielrodrigues/task-manager-pro-backend/internal/http"
+	"github.com/bielrodrigues/task-manager-pro-backend/internal/tasks"
 	"github.com/bielrodrigues/task-manager-pro-backend/internal/users"
 )
 
@@ -23,6 +24,7 @@ func main() {
 
 	// Migrate User
 	users.Migrate()
+	tasks.Migrate()
 
 	// Create Gin router
 	r := gin.Default()
