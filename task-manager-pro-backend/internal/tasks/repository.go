@@ -108,9 +108,37 @@ func DeleteTask(UserID uint, id uint) error {
 
 func GetTaskByID(userID uint, id uint) (*Task, error) {
 	var task Task
-	err := database.DB.Preload("Tags").Where("id = ? AND user_id ?", id, userID).First(&task).Error
+	err := database.DB.Preload("Tags").Where("id = ? AND user_id = ?", id, userID).First(&task).Error
 	if err != nil {
 		return nil, err
 	}
+
 	return &task, nil
+}
+
+func ListTasks(userID uint, filter TaskFilter) ([]Task, error) {
+	db := database.DB.Preload("Tag").Where("user_id = ?", userID)
+
+	if filter.Status != "" {
+		db = db.Where("status = ?", strings.ToUpper(filter.Status))
+	}
+	if filter.Priority != "" {
+		db = db.Where("priority = ?", strings.ToUpper(filter.Priority))
+	}
+	if filter.Query != "" {
+		q := "%" + filter.Query + "%"
+		db = db.Where("title LIKE ? OR description ILIKE ?", q, q)
+	}
+	if filter.Tags != "" {
+		db = db.Joins("JOIN task_tags ON task_tags.task_id = tasks.id").
+			Joins("JOIN tags ON tags.id = task_tags.tag_id").Where("tags.name = ?", filter.Tags)
+	}
+
+	var tasks []Task
+
+	if err := db.Order("create_at DESC").Find(&tasks).Error; err != nil {
+		return nil, err
+	}
+
+	return tasks, nil
 }
