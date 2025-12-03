@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"log"
 	"net/http"
 	"strings"
 
@@ -15,13 +16,18 @@ const UserIDKey = "userID"
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
+		log.Println("Authorization header recebido:", authHeader)
+
 		if authHeader == "" {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "missing Authorization header"})
 			c.Abort()
 			return
 		}
 
-		parts := strings.SplitN(authHeader, "", 2)
+		// Usa Fields para quebrar por QUALQUER espaço em branco (1 ou mais)
+		parts := strings.Fields(authHeader)
+		log.Printf("Parts do header: %#v\n", parts)
+
 		if len(parts) != 2 || strings.ToLower(parts[0]) != "bearer" {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid Authorization header format"})
 			c.Abort()
@@ -33,16 +39,16 @@ func AuthMiddleware() gin.HandlerFunc {
 		token, err := jwt.ParseWithClaims(tokenStr, &Claims{}, func(token *jwt.Token) (interface{}, error) {
 			return []byte(config.JWTSecret), nil
 		})
-
-		claims, ok := token.Claims.(*Claims)
-		if !ok {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid token claims"})
+		if err != nil || !token.Valid {
+			log.Println("Erro ao validar token:", err)
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid or expired token"})
 			c.Abort()
 			return
 		}
 
-		if err != nil || !token.Valid {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid or expired token"})
+		claims, ok := token.Claims.(*Claims)
+		if !ok {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid token claims"})
 			c.Abort()
 			return
 		}
@@ -52,10 +58,9 @@ func AuthMiddleware() gin.HandlerFunc {
 	}
 }
 
-// Helper pra pegar o userID dentro dos handlers
 func GetUserID(c *gin.Context) (uint, bool) {
-	value, exist := c.Get(UserIDKey)
-	if !exist {
+	value, exists := c.Get(UserIDKey)
+	if !exists {
 		return 0, false
 	}
 	id, ok := value.(uint)
