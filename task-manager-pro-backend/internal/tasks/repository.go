@@ -67,7 +67,7 @@ func CreateTask(userID uint, input CreateTaskInput) (*Task, error) {
 
 func UpdateTask(userID uint, id uint, input UpdateTaskInput) (*Task, error) {
 	var task Task
-	if err := database.DB.Preload("Tags").Where("id = ? AND user = ?", id, userID).
+	if err := database.DB.Preload("Tags").Where("id = ? AND user_id = ?", id, userID).
 		First(&task).Error; err != nil {
 		return nil, err
 	}

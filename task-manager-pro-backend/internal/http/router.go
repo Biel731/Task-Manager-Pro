@@ -29,6 +29,6 @@ func RegisterRoutes(r *gin.Engine) {
 	protected.GET("/tasks", tasks.ListarTaskHandler)
 	protected.GET("/tasks/:id", tasks.GetTaskHandler)
 	protected.POST("/tasks", tasks.CreateTaskHandler)
-	protected.PUT("tasks/:id", tasks.UpdateTaskHandler)
-	protected.DELETE("tasks/:id", tasks.DeleteTaskHandler)
+	protected.PUT("/tasks/:id", tasks.UpdateTaskHandler)
+	protected.DELETE("/tasks/:id", tasks.DeleteTaskHandler)
 }
