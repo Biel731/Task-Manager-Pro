@@ -102,8 +102,30 @@ func UpdateTask(userID uint, id uint, input UpdateTaskInput) (*Task, error) {
 	return &task, nil
 }
 
-func DeleteTask(UserID uint, id uint) error {
-	return database.DB.Where("id = ? AND user_id = ?", id, UserID).Delete(&Task{}).Error
+func DeleteTask(userID uint, taskID uint) error {
+	var task Task
+
+	// 1) Buscar a task do usuário
+	if err := database.DB.
+		Where("id = ? AND user_id = ?", taskID, userID).
+		First(&task).Error; err != nil {
+		return err
+	}
+
+	// 2) Limpar as associações na tabela task_tags
+	if err := database.DB.
+		Model(&task).
+		Association("Tags").
+		Clear(); err != nil {
+		return err
+	}
+
+	// 3) Agora sim, deletar a task
+	if err := database.DB.Delete(&task).Error; err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func GetTaskByID(userID uint, id uint) (*Task, error) {
@@ -117,7 +139,7 @@ func GetTaskByID(userID uint, id uint) (*Task, error) {
 }
 
 func ListTasks(userID uint, filter TaskFilter) ([]Task, error) {
-	db := database.DB.Preload("Tag").Where("user_id = ?", userID)
+	db := database.DB.Preload("Tags").Where("user_id = ?", userID)
 
 	if filter.Status != "" {
 		db = db.Where("status = ?", strings.ToUpper(filter.Status))
@@ -136,7 +158,7 @@ func ListTasks(userID uint, filter TaskFilter) ([]Task, error) {
 
 	var tasks []Task
 
-	if err := db.Order("create_at DESC").Find(&tasks).Error; err != nil {
+	if err := db.Order("created_at DESC").Find(&tasks).Error; err != nil {
 		return nil, err
 	}
 

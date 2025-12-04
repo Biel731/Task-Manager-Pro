@@ -4,7 +4,12 @@ import (
 	"net/http"
 	"strconv"
 
+	"errors"
+
+	"gorm.io/gorm"
+
 	"github.com/bielrodrigues/task-manager-pro-backend/internal/auth"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -68,7 +73,7 @@ func DeleteTaskHandler(c *gin.Context) {
 	}
 
 	idParam := c.Param("id")
-	id64, err := strconv.ParseUint(idParam, 10, 32)
+	id64, err := strconv.ParseUint(idParam, 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid task id"})
 		return
@@ -76,7 +81,11 @@ func DeleteTaskHandler(c *gin.Context) {
 	id := uint(id64)
 
 	if err := DeleteTask(userID, id); err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "task not found"})
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "task not found"})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to delete task"})
+		}
 		return
 	}
 
