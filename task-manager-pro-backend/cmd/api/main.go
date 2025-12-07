@@ -1,10 +1,9 @@
 package main
 
 import (
-	"log"
-
 	"github.com/gin-gonic/gin"
 
+	"github.com/bielrodrigues/task-manager-pro-backend/internal/cache"
 	"github.com/bielrodrigues/task-manager-pro-backend/internal/config"
 	"github.com/bielrodrigues/task-manager-pro-backend/internal/database"
 	"github.com/bielrodrigues/task-manager-pro-backend/internal/http"
@@ -32,6 +31,7 @@ func main() {
 	// Register routes
 	http.RegisterRoutes(r)
 
-	log.Println("\r\n🚀 Server running at http://localhost:8080")
-	r.Run(":8080")
+	// Redis
+	redisClient := cache.NewClientRedis(config.RedisURL)
+	tasksService := tasks.NewService(database.DB, redisClient)
 }
