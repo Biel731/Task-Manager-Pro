@@ -139,3 +139,25 @@ func ListarTaskHandler(c *gin.Context) {
 
 	c.JSON(http.StatusOK, tasks)
 }
+
+func SearchTasksHandler(c *gin.Context) {
+	userID, ok := auth.GetUserID(c)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	query := c.Query("q")
+	if query == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "missing query parameter 'q'"})
+		return
+	}
+
+	tasks, err := SearchTasks(userID, query)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to search tasks"})
+		return
+	}
+
+	c.JSON(http.StatusOK, tasks)
+}

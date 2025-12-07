@@ -1,37 +1,44 @@
 package main
 
 import (
+	"log"
+
 	"github.com/gin-gonic/gin"
 
 	"github.com/bielrodrigues/task-manager-pro-backend/internal/cache"
 	"github.com/bielrodrigues/task-manager-pro-backend/internal/config"
 	"github.com/bielrodrigues/task-manager-pro-backend/internal/database"
-	"github.com/bielrodrigues/task-manager-pro-backend/internal/http"
+	internalhttp "github.com/bielrodrigues/task-manager-pro-backend/internal/http"
 	"github.com/bielrodrigues/task-manager-pro-backend/internal/tasks"
 	"github.com/bielrodrigues/task-manager-pro-backend/internal/users"
 )
 
 func main() {
-	// Load env/config
+	// Carrega variáveis de ambiente / config
 	config.Load()
 
-	// Connect to Postgres
+	// Conecta no Postgres
 	database.ConnectPostgres()
 
-	// Connect to Redis
-	database.ConnectRedis()
+	redisClient := cache.NewClientRedis(config.RedisURL)
+	tasks.SetRedisClient(redisClient)
 
-	// Migrate User
+	// (Se o database.ConnectRedis for obrigatório para outras partes do projeto,
+	// você pode manter, mas para o nosso fluxo de busca com cache não é estritamente necessário)
+	// database.ConnectRedis()
+
+	// Migrations
 	users.Migrate()
 	tasks.Migrate()
 
-	// Create Gin router
+	// Cria router Gin
 	r := gin.Default()
 
-	// Register routes
-	http.RegisterRoutes(r)
+	// Registra as rotas (auth, users, tasks, etc.)
+	internalhttp.RegisterRoutes(r)
 
-	// Redis
-	redisClient := cache.NewClientRedis(config.RedisURL)
-	tasksService := tasks.NewService(database.DB, redisClient)
+	// Sobe o servidor
+	if err := r.Run(); err != nil {
+		log.Fatal(err)
+	}
 }

@@ -2,8 +2,6 @@ package tasks
 
 import (
 	"context"
-	"crypto/sha1"
-	"encoding/hex"
 	"encoding/json"
 	"time"
 
@@ -18,11 +16,6 @@ type Service struct {
 
 func NewService(db *gorm.DB, cache *cache.RedisClient) *Service {
 	return &Service{db: db, cache: cache}
-}
-
-func hashQuery(q string) string {
-	h := sha1.Sum([]byte(q))
-	return hex.EncodeToString(h[:])
 }
 
 func (s *Service) SearchTasks(ctx context.Context, userID uint, query string) ([]Task, error) {
