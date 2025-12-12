@@ -25,13 +25,24 @@ func RegisterRoutes(r *gin.Engine) {
 	protected := api.Group("/")
 	protected.Use(auth.AuthMiddleware())
 
-	// TASKS
-	protected.GET("/tasks", tasks.ListarTaskHandler)
-	protected.GET("/tasks/:id", tasks.GetTaskHandler)
-	protected.POST("/tasks", tasks.CreateTaskHandler)
-	protected.PUT("/tasks/:id", tasks.UpdateTaskHandler)
-	protected.DELETE("/tasks/:id", tasks.DeleteTaskHandler)
+	// ===== TASKS =====
+	tasksGroup := protected.Group("/tasks")
 
-	protected.GET("", tasks.ListarTaskHandler)
-	protected.GET("/search", tasks.SearchTasksHandler)
+	// LIST (sem cache, com filtros)
+	tasksGroup.GET("", tasks.ListarTaskHandler)
+
+	// SEARCH (com cache Redis) -> /api/tasks/search
+	tasksGroup.GET("/search", tasks.SearchTasksHandler)
+
+	// GET por ID -> /api/tasks/:id
+	tasksGroup.GET("/:id", tasks.GetTaskHandler)
+
+	// CREATE -> /api/tasks
+	tasksGroup.POST("", tasks.CreateTaskHandler)
+
+	// UPDATE -> /api/tasks/:id
+	tasksGroup.PUT("/:id", tasks.UpdateTaskHandler)
+
+	// DELETE -> /api/tasks/:id
+	tasksGroup.DELETE("/:id", tasks.DeleteTaskHandler)
 }
