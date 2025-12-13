@@ -139,26 +139,46 @@ func GetTaskByID(userID uint, id uint) (*Task, error) {
 }
 
 func ListTasks(userID uint, filter TaskFilter) ([]Task, error) {
-	db := database.DB.Preload("Tags").Where("user_id = ?", userID)
+	db := database.DB.
+		Model(&Task{}).
+		Preload("Tags").
+		Where("tasks.user_id = ?", userID)
 
+	// filtros simples
 	if filter.Status != "" {
-		db = db.Where("status = ?", strings.ToUpper(filter.Status))
+		db = db.Where("tasks.status = ?", strings.ToUpper(filter.Status))
 	}
 	if filter.Priority != "" {
-		db = db.Where("priority = ?", strings.ToUpper(filter.Priority))
+		db = db.Where("tasks.priority = ?", strings.ToUpper(filter.Priority))
 	}
+
+	// 🔍 Query: busca em title, description E tags.name
 	if filter.Query != "" {
 		q := "%" + filter.Query + "%"
-		db = db.Where("title LIKE ? OR description ILIKE ?", q, q)
+
+		// LEFT JOIN para permitir buscar tags sem excluir tasks que não tenham tags
+		db = db.
+			Joins("LEFT JOIN task_tags ON task_tags.task_id = tasks.id").
+			Joins("LEFT JOIN tags ON tags.id = task_tags.tag_id").
+			Where(`
+					tasks.title ILIKE ?
+					OR tasks.description ILIKE ?
+					OR tags.name ILIKE ?
+				`, q, q, q).
+			Group("tasks.id")
 	}
+
+	// filtro por tag exata (se você quiser continuar suportando)
 	if filter.Tags != "" {
-		db = db.Joins("JOIN task_tags ON task_tags.task_id = tasks.id").
-			Joins("JOIN tags ON tags.id = task_tags.tag_id").Where("tags.name = ?", filter.Tags)
+		db = db.
+			Joins("JOIN task_tags tt ON tt.task_id = tasks.id").
+			Joins("JOIN tags t ON t.id = tt.tag_id").
+			Where("t.name = ?", strings.TrimSpace(filter.Tags)).
+			Distinct("tasks.id")
 	}
 
 	var tasks []Task
-
-	if err := db.Order("created_at DESC").Find(&tasks).Error; err != nil {
+	if err := db.Order("tasks.created_at DESC").Find(&tasks).Error; err != nil {
 		return nil, err
 	}
 
