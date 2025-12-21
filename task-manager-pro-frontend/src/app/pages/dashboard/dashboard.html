@@ -1,10 +1,154 @@
-<h2>Minhas Tasks</h2>
+<div class="page">
+  <div class="topbar">
+    <h1>Minhas Tasks</h1>
+    <button class="btn ghost" type="button" (click)="logout()">Sair</button>
+  </div>
 
-<p *ngIf="loading">Carregando...</p>
-<p *ngIf="error" style="color: red">{{ error }}</p>
+  <!-- SEARCH + HISTORY -->
+  <div class="card">
+    <label>Buscar (Redis cache)</label>
 
-<ul *ngIf="!loading">
-  <li *ngFor="let task of tasks">
-    <strong>{{ task.title }}</strong> — {{ task.status }}
-  </li>
-</ul>
+    <form [formGroup]="searchForm" (submit)="$event.preventDefault()">
+      <div class="row">
+        <div class="col">
+          <input
+            type="text"
+            formControlName="q"
+            placeholder="Ex: estudar go, academia, mercado..."
+          />
+        </div>
+
+        <div class="col right">
+          <button class="btn ghost" type="button" (click)="clearSearch()">Limpar</button>
+          <button class="btn" type="button" (click)="loadTasks()">Atualizar</button>
+        </div>
+      </div>
+    </form>
+
+    <div *ngIf="history.length > 0" style="margin-top: 14px">
+      <div style="opacity: 0.9; margin-bottom: 10px">Últimas buscas</div>
+
+      <div style="display: flex; flex-wrap: wrap; gap: 8px">
+        <button
+          class="btn small ghost"
+          *ngFor="let h of history"
+          type="button"
+          (click)="clickHistory(h)"
+          title="Clique para buscar"
+        >
+          {{ h }}
+        </button>
+      </div>
+    </div>
+
+    <p class="error" *ngIf="errorMsg">{{ errorMsg }}</p>
+  </div>
+
+  <!-- CREATE -->
+  <div class="card">
+    <h2>Criar task</h2>
+
+    <form class="form" [formGroup]="createForm" (ngSubmit)="onCreate()">
+      <label>Título</label>
+      <input formControlName="title" placeholder="Ex: Estudar Go" />
+
+      <label>Descrição</label>
+      <input formControlName="description" placeholder="Opcional" />
+
+      <div class="row">
+        <div class="col">
+          <label>Status</label>
+          <select formControlName="status">
+            <option value="TODO">TODO</option>
+            <option value="DOING">DOING</option>
+            <option value="DONE">DONE</option>
+          </select>
+        </div>
+
+        <div class="col">
+          <label>Prioridade</label>
+          <select formControlName="priority">
+            <option value="LOW">LOW</option>
+            <option value="MEDIUM">MEDIUM</option>
+            <option value="HIGH">HIGH</option>
+          </select>
+        </div>
+
+        <div class="col right">
+          <button class="btn" type="submit" [disabled]="loading || createForm.invalid">
+            {{ loading ? 'Criando...' : 'Criar' }}
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- LIST -->
+  <div class="card">
+    <div class="listHeader">
+      <h2>Lista</h2>
+      <button class="btn ghost" type="button" (click)="loadTasks()">Atualizar</button>
+    </div>
+
+    <p *ngIf="loading">Carregando...</p>
+
+    <div class="task" *ngFor="let t of tasks">
+      <div class="taskTop">
+        <strong>{{ t.title }}</strong>
+
+        <div class="actions" *ngIf="editingId !== t.id">
+          <button class="btn small" type="button" (click)="startEdit(t)">Editar</button>
+          <button class="btn small danger" type="button" (click)="deleteTask(t.id)">Deletar</button>
+        </div>
+      </div>
+
+      <ng-container *ngIf="editingId !== t.id; else editTpl">
+        <div class="badges">
+          <span class="badge">{{ t.status }}</span>
+          <span class="badge">{{ t.priority }}</span>
+        </div>
+
+        <p class="desc" *ngIf="t.description">{{ t.description }}</p>
+      </ng-container>
+
+      <ng-template #editTpl>
+        <form class="editForm" [formGroup]="editForm" (ngSubmit)="saveEdit(t.id)">
+          <label>Título</label>
+          <input formControlName="title" />
+
+          <label>Descrição</label>
+          <input formControlName="description" />
+
+          <div class="row">
+            <div class="col">
+              <label>Status</label>
+              <select formControlName="status">
+                <option value="TODO">TODO</option>
+                <option value="DOING">DOING</option>
+                <option value="DONE">DONE</option>
+              </select>
+            </div>
+
+            <div class="col">
+              <label>Prioridade</label>
+              <select formControlName="priority">
+                <option value="LOW">LOW</option>
+                <option value="MEDIUM">MEDIUM</option>
+                <option value="HIGH">HIGH</option>
+              </select>
+            </div>
+
+            <div class="col right">
+              <button class="btn small" type="submit" [disabled]="loading || editForm.invalid">
+                Salvar
+              </button>
+              <button class="btn small ghost" type="button" (click)="cancelEdit()">Cancelar</button>
+            </div>
+          </div>
+        </form>
+      </ng-template>
+    </div>
+
+    <p *ngIf="!loading && tasks.length === 0">Nenhuma task encontrada.</p>
+  </div>
+</div>

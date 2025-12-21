@@ -1,0 +1,198 @@
+.page {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.card {
+  background: #0f1115;
+  border: 1px solid #1e2230;
+  border-radius: 12px;
+  padding: 18px;
+  margin-bottom: 18px;
+}
+
+/* ---------- Layout base ---------- */
+.row {
+  display: flex;
+  gap: 12px;
+  align-items: end;
+  flex-wrap: wrap; /* evita quebrar layout em telas menores */
+}
+
+.col {
+  flex: 1;
+  min-width: 0; /* ✅ CRÍTICO: permite o input encolher sem vazar */
+}
+
+.col.right {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  align-items: center;
+  flex: 0 0 auto;
+  min-width: fit-content;
+}
+
+label {
+  display: block;
+  margin: 10px 0 6px;
+  opacity: 0.9;
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  max-width: 100%; /* ✅ garante que nunca passe do container */
+  box-sizing: border-box; /* ✅ padding não aumenta width */
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #22283a;
+  background: #0b0d12;
+  color: #fff;
+}
+
+textarea {
+  min-height: 90px;
+  resize: vertical;
+}
+
+/* ---------- Search (Redis) ---------- */
+/* container do input + botões */
+.searchRow {
+  display: grid;
+  grid-template-columns: 1fr auto; /* input ocupa, botões tamanho fixo */
+  gap: 12px;
+  align-items: end;
+}
+
+.searchActions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: flex-end;
+  white-space: nowrap;
+}
+
+/* ---------- Form (Criar task) ---------- */
+.formGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.formGrid .full {
+  grid-column: 1 / -1; /* ocupa as duas colunas */
+}
+
+/* botão criar alinhado no canto */
+.formFooter {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 12px;
+}
+
+@media (max-width: 720px) {
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
+  .formGrid .full {
+    grid-column: auto;
+  }
+  .searchRow {
+    grid-template-columns: 1fr; /* empilha no mobile */
+  }
+  .searchActions {
+    justify-content: flex-start;
+  }
+}
+
+/* ---------- Lista ---------- */
+.listHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.task {
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid #1e2230;
+  background: #0b0d12;
+  margin-top: 12px;
+}
+
+.taskTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+}
+
+.badges {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.badge {
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid #2a3046;
+  opacity: 0.9;
+}
+
+.desc {
+  margin: 10px 0 0;
+  opacity: 0.9;
+}
+
+.error {
+  color: #ff6b6b;
+  margin: 10px 0;
+}
+
+/* ---------- Buttons ---------- */
+.btn {
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid #2a3046;
+  background: #161a25;
+  color: #fff;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.btn.ghost {
+  background: transparent;
+}
+
+.btn.danger {
+  border-color: #5a2a2a;
+  background: #221010;
+}
+
+.btn.small {
+  padding: 8px 10px;
+  font-size: 12px;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

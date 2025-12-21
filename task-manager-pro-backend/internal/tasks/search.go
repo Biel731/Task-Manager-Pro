@@ -96,3 +96,18 @@ func pushSearchHistory(historyKey, query string) error {
 	_, err := pipe.Exec(redisCtx)
 	return err
 }
+
+func GetSearchHistory(userID uint) ([]string, error) {
+	if redisClient == nil || redisClient.Client == nil {
+		return []string{}, nil
+	}
+
+	historyKey := "tmpro:search:history:" + strconv.Itoa(int(userID))
+
+	items, err := redisClient.Client.LRange(redisCtx, historyKey, 0, 9).Result()
+	if err != nil && err != redis.Nil {
+		return nil, err
+	}
+
+	return items, nil
+}

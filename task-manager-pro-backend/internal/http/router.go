@@ -33,6 +33,7 @@ func RegisterRoutes(r *gin.Engine) {
 
 	// SEARCH (com cache Redis) -> /api/tasks/search
 	tasksGroup.GET("/search", tasks.SearchTasksHandler)
+	tasksGroup.GET("/tasks/search/history", tasks.GetSearchHistoryHandler)
 
 	// GET por ID -> /api/tasks/:id
 	tasksGroup.GET("/:id", tasks.GetTaskHandler)

@@ -161,3 +161,19 @@ func SearchTasksHandler(c *gin.Context) {
 
 	c.JSON(http.StatusOK, tasks)
 }
+
+func GetSearchHistoryHandler(c *gin.Context) {
+	userID, ok := auth.GetUserID(c)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	history, err := GetSearchHistory(uint(userID))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch search history"})
+		return
+	}
+
+	c.JSON(http.StatusOK, history)
+}
