@@ -18,15 +18,16 @@ export class AuthService {
     return isPlatformBrowser(this.platformId);
   }
 
-  register(email: string, password: string): Observable<unknown> {
-    return this.http.post(`${this.baseUrl}/auth/register`, { email, password });
-  }
+  register(payload: { name: string; email: string; password: string }) {
+  return this.http.post('/api/auth/register', payload);
+}
+
 
   login(email: string, password: string): Observable<LoginResponse> {
-    return this.http
-      .post<LoginResponse>(`${this.baseUrl}/auth/login`, { email, password })
-      .pipe(tap((res) => this.setToken(res.token)));
-  }
+  return this.http
+    .post<LoginResponse>('/api/auth/login', { email, password })
+    .pipe(tap((res) => this.setToken(res.token)));
+}
 
   logout(): void {
     if (!this.isBrowser) return;

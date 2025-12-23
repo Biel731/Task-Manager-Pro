@@ -1,1 +1,77 @@
-<p>register works!</p>
+<div class="auth-page">
+  <div class="card">
+    <div class="header">
+      <h1>Criar conta</h1>
+      <p>Crie sua conta para começar a gerenciar suas tasks</p>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <div class="field">
+        <label for="name">Nome</label>
+        <input
+          id="name"
+          type="text"
+          placeholder="Seu nome"
+          formControlName="name"
+          [class.invalid]="name?.touched && name?.invalid"
+          autocomplete="name"
+        />
+
+        <div class="hint error" *ngIf="name?.touched && name?.invalid">
+          <span *ngIf="name?.errors?.['required']">Informe seu nome.</span>
+          <span *ngIf="name?.errors?.['minlength']"> O nome deve ter no mínimo 2 caracteres. </span>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="email">E-mail</label>
+        <input
+          id="email"
+          type="email"
+          placeholder="seuemail@exemplo.com"
+          formControlName="email"
+          [class.invalid]="email?.touched && email?.invalid"
+          autocomplete="email"
+        />
+
+        <div class="hint error" *ngIf="email?.touched && email?.invalid">
+          <span *ngIf="email?.errors?.['required']">Informe seu e-mail.</span>
+          <span *ngIf="email?.errors?.['email']">E-mail inválido.</span>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="password">Senha</label>
+        <input
+          id="password"
+          type="password"
+          placeholder="********"
+          formControlName="password"
+          [class.invalid]="password?.touched && password?.invalid"
+          autocomplete="new-password"
+        />
+
+        <div class="hint error" *ngIf="password?.touched && password?.invalid">
+          <span *ngIf="password?.errors?.['required']">Informe sua senha.</span>
+          <span *ngIf="password?.errors?.['minlength']">
+            A senha deve ter no mínimo 6 caracteres.
+          </span>
+        </div>
+      </div>
+
+      <div class="banner error" *ngIf="errorMsg">
+        {{ errorMsg }}
+      </div>
+
+      <button class="btn" type="submit" [disabled]="loading">
+        <span *ngIf="!loading">Criar conta</span>
+        <span *ngIf="loading">Criando...</span>
+      </button>
+
+      <div class="footer">
+        <span>Já tem conta?</span>
+        <a routerLink="/login">Entrar</a>
+      </div>
+    </form>
+  </div>
+</div>

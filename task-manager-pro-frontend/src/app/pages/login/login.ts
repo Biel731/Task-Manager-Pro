@@ -1,31 +1,41 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
-import { FormBuilder, ReactiveFormsModule, Validators, FormGroup } from '@angular/forms';
-
 import { AuthService } from '../../core/auth/auth.service';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, RouterModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterModule],
   templateUrl: './login.html',
+  styleUrls: ['./login.scss'],
 })
 export class LoginComponent {
   loading = false;
   errorMsg = '';
 
-  form!: FormGroup;
+  // ✅ declara primeiro
+  form: ReturnType<FormBuilder['group']>;
 
   constructor(
     private fb: FormBuilder,
     private auth: AuthService,
     private router: Router
   ) {
+    // ✅ inicializa aqui (fb já existe)
     this.form = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
-      password: ['', [Validators.required, Validators.minLength(4)]],
+      password: ['', [Validators.required, Validators.minLength(6)]],
     });
+  }
+
+  get email() {
+    return this.form.get('email');
+  }
+
+  get password() {
+    return this.form.get('password');
   }
 
   submit(): void {
@@ -36,7 +46,8 @@ export class LoginComponent {
       return;
     }
 
-    const { email, password } = this.form.value;
+    const email = String(this.email?.value || '').trim();
+    const password = String(this.password?.value || '');
 
     this.loading = true;
 
@@ -48,7 +59,10 @@ export class LoginComponent {
       error: (err) => {
         this.loading = false;
         this.errorMsg =
-          err?.error?.error || err?.error?.message || 'Falha no login';
+          err?.error?.error ||
+          err?.error?.message ||
+          err?.message ||
+          'Falha no login';
       },
     });
   }

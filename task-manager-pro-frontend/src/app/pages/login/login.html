@@ -1,16 +1,60 @@
-<h2>Login</h2>
+<div class="auth-page">
+  <div class="card">
+    <div class="header">
+      <h1>Entrar</h1>
+      <p>Acesse sua conta para gerenciar suas tasks</p>
+    </div>
 
-<form [formGroup]="form" (ngSubmit)="submit()">
-  <input type="email" placeholder="Email" formControlName="email" />
-  <input type="password" placeholder="Senha" formControlName="password" />
+    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <div class="field">
+        <label for="email">E-mail</label>
+        <input
+          id="email"
+          type="email"
+          placeholder="seuemail@exemplo.com"
+          formControlName="email"
+          [class.invalid]="email?.touched && email?.invalid"
+          autocomplete="email"
+        />
 
-  <button type="submit" [disabled]="loading">
-    {{ loading ? 'Entrando...' : 'Entrar' }}
-  </button>
-</form>
+        <div class="hint error" *ngIf="email?.touched && email?.invalid">
+          <span *ngIf="email?.errors?.['required']">Informe seu e-mail.</span>
+          <span *ngIf="email?.errors?.['email']">E-mail inválido.</span>
+        </div>
+      </div>
 
-<p *ngIf="errorMsg" style="color: #ff6b6b; margin-top: 8px">
-  {{ errorMsg }}
-</p>
+      <div class="field">
+        <label for="password">Senha</label>
+        <input
+          id="password"
+          type="password"
+          placeholder="********"
+          formControlName="password"
+          [class.invalid]="password?.touched && password?.invalid"
+          autocomplete="current-password"
+        />
 
-<a routerLink="/register">Criar conta</a>
+        <div class="hint error" *ngIf="password?.touched && password?.invalid">
+          <span *ngIf="password?.errors?.['required']">Informe sua senha.</span>
+          <span *ngIf="password?.errors?.['minlength']">
+            A senha deve ter no mínimo 6 caracteres.
+          </span>
+        </div>
+      </div>
+
+      <div class="banner error" *ngIf="errorMsg">
+        {{ errorMsg }}
+      </div>
+
+      <button class="btn" type="submit" [disabled]="loading">
+        <span *ngIf="!loading">Entrar</span>
+        <span *ngIf="loading">Entrando...</span>
+      </button>
+
+      <div class="footer">
+        <span>Não tem conta?</span>
+        <a routerLink="/register">Criar agora</a>
+      </div>
+    </form>
+  </div>
+</div>
