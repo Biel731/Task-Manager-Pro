@@ -39,7 +39,6 @@ func RegisterRoutes(r *gin.Engine) {
 	aiGroup := protected.Group("/ai")
 	aiGroup.POST("/suggest-title", aiHandler.SuggestTitles)
 	aiGroup.POST("/improve-description", aiHandler.ImproveDescription)
-	aiGroup.POST("/generate-subtasks", aiHandler.GenerateSubtasks)
 	// Resultado: POST /api/ai/suggest-title
 
 	// ===== TASKS =====

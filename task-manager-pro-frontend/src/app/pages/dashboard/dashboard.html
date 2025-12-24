@@ -55,6 +55,30 @@
       <label>Descrição</label>
       <input formControlName="description" placeholder="Opcional" />
 
+      <!-- IA Actions (Create) -->
+      <div class="ai-actions" style="margin-top: 10px">
+        <button
+          class="btn small ghost"
+          type="button"
+          (click)="onSuggestTitle('create')"
+          [disabled]="aiLoading"
+        >
+          ✨ Sugerir título
+        </button>
+
+        <button
+          class="btn small ghost"
+          type="button"
+          (click)="onImproveDescription('create')"
+          [disabled]="aiLoading"
+        >
+          ✨ Melhorar descrição
+        </button>
+
+        <span *ngIf="aiLoading" style="opacity: 0.85">Gerando...</span>
+        <span *ngIf="aiError" style="color: #ff6b6b">{{ aiError }}</span>
+      </div>
+
       <div class="row">
         <div class="col">
           <label>Status</label>
@@ -119,6 +143,30 @@
           <label>Descrição</label>
           <input formControlName="description" />
 
+          <!-- IA Actions (Edit) -->
+          <div class="ai-actions" style="margin-top: 10px">
+            <button
+              class="btn small ghost"
+              type="button"
+              (click)="onSuggestTitle('edit')"
+              [disabled]="aiLoading"
+            >
+              ✨ Sugerir título
+            </button>
+
+            <button
+              class="btn small ghost"
+              type="button"
+              (click)="onImproveDescription('edit')"
+              [disabled]="aiLoading"
+            >
+              ✨ Melhorar descrição
+            </button>
+
+            <span *ngIf="aiLoading" style="opacity: 0.85">Gerando...</span>
+            <span *ngIf="aiError" style="color: #ff6b6b">{{ aiError }}</span>
+          </div>
+
           <div class="row">
             <div class="col">
               <label>Status</label>
@@ -150,5 +198,60 @@
     </div>
 
     <p *ngIf="!loading && tasks.length === 0">Nenhuma task encontrada.</p>
+  </div>
+
+  <!-- ===== IA MODAL (shared) ===== -->
+  <div class="ai-modal-backdrop" *ngIf="aiModal">
+    <div class="ai-modal">
+      <div
+        class="ai-modal-header"
+        style="display: flex; justify-content: space-between; align-items: center"
+      >
+        <h3 style="margin: 0" *ngIf="aiModal === 'titles'">Escolha um título</h3>
+        <h3 style="margin: 0" *ngIf="aiModal === 'improve'">Descrição melhorada</h3>
+
+        <button type="button" class="btn small ghost" (click)="closeAiModal()">✕</button>
+      </div>
+
+      <div class="ai-modal-body" style="margin-top: 12px">
+        <!-- TITLES -->
+        <div *ngIf="aiModal === 'titles'">
+          <div
+            class="option"
+            *ngFor="let t of aiTitleOptions"
+            style="
+              display: flex;
+              justify-content: space-between;
+              gap: 12px;
+              padding: 10px;
+              border: 1px solid rgba(255, 255, 255, 0.12);
+              border-radius: 10px;
+              margin-bottom: 10px;
+            "
+          >
+            <div class="text" style="flex: 1">{{ t }}</div>
+            <button class="btn small" type="button" (click)="applyTitle(t)">Aplicar</button>
+          </div>
+        </div>
+
+        <!-- IMPROVE -->
+        <div *ngIf="aiModal === 'improve'">
+          <p style="opacity: 0.95; line-height: 1.4; white-space: pre-wrap">
+            {{ aiImprovedText }}
+          </p>
+
+          <ul style="margin-top: 10px">
+            <li *ngFor="let b of aiImprovedBullets">{{ b }}</li>
+          </ul>
+
+          <div style="display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap">
+            <button class="btn" type="button" (click)="applyImprovedDescription()">
+              Aplicar descrição
+            </button>
+            <button class="btn ghost" type="button" (click)="closeAiModal()">Cancelar</button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
