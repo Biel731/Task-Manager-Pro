@@ -48,12 +48,12 @@ func SearchTasks(userID uint, query string) ([]Task, error) {
 		if json.Unmarshal([]byte(cached), &tasks) == nil {
 			// Atualiza histórico mesmo quando pega do cache
 			_ = pushSearchHistory(historyKey, query)
-			fmt.Println("🔄 Resultado retornado do CACHE!")
+			fmt.Println("Resultado retornado do CACHE!")
 			return tasks, nil
 		}
 	} else if err != nil && err != redis.Nil {
 		// erro inesperado do Redis (não derruba o sistema)
-		fmt.Println("⚠️ Erro no Redis GET:", err)
+		fmt.Println("Erro no Redis GET:", err)
 	}
 
 	// -----------------------------------------------------------------------
@@ -71,14 +71,14 @@ func SearchTasks(userID uint, query string) ([]Task, error) {
 	jsonData, _ := json.Marshal(tasks)
 
 	if err := redisClient.Client.Set(redisCtx, cacheKey, jsonData, 30*time.Second).Err(); err != nil {
-		fmt.Println("⚠️ Erro ao salvar no Redis:", err)
+		fmt.Println("Erro ao salvar no Redis:", err)
 	}
 
 	// -----------------------------------------------------------------------
 	// 4. Atualiza o histórico (últimas 10 buscas)
 	// -----------------------------------------------------------------------
 	if err := pushSearchHistory(historyKey, query); err != nil {
-		fmt.Println("⚠️ Erro ao atualizar histórico:", err)
+		fmt.Println("Erro ao atualizar histórico:", err)
 	}
 
 	return tasks, nil

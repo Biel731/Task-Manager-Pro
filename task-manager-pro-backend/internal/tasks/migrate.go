@@ -9,9 +9,9 @@ import (
 func Migrate() {
 	err := database.DB.AutoMigrate(&Tag{}, &Task{})
 	if err != nil {
-		log.Fatal("❌ Failed to migrate tasks/tags tables:", err)
+		log.Fatal("Failed to migrate tasks/tags tables:", err)
 	}
 
-	log.Println("✅ Tasks & Tags tables migrated")
+	log.Println("Tasks & Tags tables migrated")
 
 }

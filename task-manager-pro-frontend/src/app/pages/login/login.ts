@@ -15,7 +15,6 @@ export class LoginComponent {
   loading = false;
   errorMsg = '';
 
-  // ✅ declara primeiro
   form: ReturnType<FormBuilder['group']>;
 
   constructor(
@@ -23,7 +22,7 @@ export class LoginComponent {
     private auth: AuthService,
     private router: Router
   ) {
-    // ✅ inicializa aqui (fb já existe)
+    
     this.form = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(6)]],

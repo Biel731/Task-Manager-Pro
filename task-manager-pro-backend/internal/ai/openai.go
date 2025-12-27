@@ -100,7 +100,6 @@ Descrição da tarefa:
 		return nil, fmt.Errorf("openai returned empty text | raw=%s", string(rawBytes))
 	}
 
-	// Esperamos JSON {"titles":[...]}
 	var out struct {
 		Titles []string `json:"titles"`
 	}

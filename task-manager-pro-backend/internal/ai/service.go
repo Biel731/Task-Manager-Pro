@@ -31,7 +31,7 @@ func (s *Service) SuggestTitles(ctx context.Context, description string) ([]stri
 
 	for _, t := range titles {
 		tt := strings.TrimSpace(t)
-		tt = strings.TrimSuffix(tt, ".") // sem ponto final
+		tt = strings.TrimSuffix(tt, ".")
 		if tt == "" {
 			continue
 		}
@@ -91,7 +91,6 @@ func (s *Service) ImproveDescription(ctx context.Context, title, description str
 		}
 	}
 
-	// se vier vazio, cria bullets simples
 	if len(clean) == 0 {
 		clean = []string{"Definir passos", "Executar", "Testar"}
 	}

@@ -20,7 +20,6 @@ func NewHandler(service *Service) *Handler {
 func (h *Handler) SuggestTitles(c *gin.Context) {
 	start := time.Now()
 
-	// user id (se seu projeto usar outra função, ajuste aqui)
 	userID, _ := auth.GetUserID(c)
 
 	var req SuggestTitleRequest

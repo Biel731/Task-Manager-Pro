@@ -51,8 +51,8 @@ input,
 select,
 textarea {
   width: 100%;
-  max-width: 100%; /* ✅ garante que nunca passe do container */
-  box-sizing: border-box; /* ✅ padding não aumenta width */
+  max-width: 100%;
+  box-sizing: border-box;
   padding: 10px 12px;
   border-radius: 10px;
   border: 1px solid #22283a;

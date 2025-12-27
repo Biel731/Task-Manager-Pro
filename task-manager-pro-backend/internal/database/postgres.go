@@ -13,10 +13,10 @@ var DB *gorm.DB
 func ConnectPostgres() {
 	db, err := gorm.Open(postgres.Open(config.DatabaseUrl), &gorm.Config{})
 	if err != nil {
-		log.Fatal("\r\n❌ PostgreSQL connection failed:\r\n", err)
+		log.Fatal("\r\nPostgreSQL connection failed:\r\n", err)
 	}
 
 	DB = db
 
-	log.Println("📦 Connected to PostgreSQL")
+	log.Println("Connected to PostgreSQL")
 }

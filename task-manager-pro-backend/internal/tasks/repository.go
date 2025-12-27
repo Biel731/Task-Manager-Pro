@@ -120,7 +120,7 @@ func DeleteTask(userID uint, taskID uint) error {
 		return err
 	}
 
-	// 3) Agora sim, deletar a task
+	// 3) Deletar a task
 	if err := database.DB.Delete(&task).Error; err != nil {
 		return err
 	}

@@ -17,7 +17,6 @@ import { TaskService, Task } from '../../core/tasks/task.service';
 import { AuthService } from '../../core/auth/auth.service';
 import { Router } from '@angular/router';
 
-// ✅ IA (somente título e descrição)
 import { AiService } from '../../core/ai/ai.service';
 
 type AiModalType = 'titles' | 'improve' | null;
@@ -181,7 +180,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
           priority: 'MEDIUM',
         });
 
-        // ✅ limpa qualquer estado de IA
+        // limpa qualquer estado de IA
         this.resetAiState();
 
         const q = (this.searchForm.get('q')?.value ?? '').trim();
@@ -207,7 +206,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       priority: t.priority ?? 'MEDIUM',
     });
 
-    // ✅ limpa qualquer estado de IA
+    // limpa qualquer estado de IA
     this.resetAiState();
   }
 
@@ -227,7 +226,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       next: () => {
         this.editingId = null;
 
-        // ✅ limpa qualquer estado de IA
+        // limpa qualquer estado de IA
         this.resetAiState();
 
         const q = (this.searchForm.get('q')?.value ?? '').trim();

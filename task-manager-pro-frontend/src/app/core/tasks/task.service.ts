@@ -26,10 +26,10 @@ export type Task = {
 export type CreateTaskPayload = {
   title: string;
   description: string;
-  status?: string;   // default no backend se você quiser
-  priority?: string; // default no backend se você quiser
+  status?: string;
+  priority?: string;
   due_date?: string | null;
-  tags?: string[];   // backend espera names (CreateTaskInput.Tags)
+  tags?: string[];
 };
 
 export type UpdateTaskPayload = {
@@ -44,7 +44,7 @@ export type UpdateTaskPayload = {
 export type TaskListFilters = {
   status?: string;
   priority?: string;
-  tags?: string; // no teu repo.go está "tags" (singular) como query param
+  tags?: string;
   q?: string;    // busca em title/description (ListTasks usa filter.Query)
 };
 

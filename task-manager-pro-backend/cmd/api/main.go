@@ -23,10 +23,6 @@ func main() {
 	redisClient := cache.NewClientRedis(config.RedisURL)
 	tasks.SetRedisClient(redisClient)
 
-	// (Se o database.ConnectRedis for obrigatório para outras partes do projeto,
-	// você pode manter, mas para o nosso fluxo de busca com cache não é estritamente necessário)
-	// database.ConnectRedis()
-
 	// Migrations
 	users.Migrate()
 	tasks.Migrate()

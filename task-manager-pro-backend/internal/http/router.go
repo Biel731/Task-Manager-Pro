@@ -39,7 +39,6 @@ func RegisterRoutes(r *gin.Engine) {
 	aiGroup := protected.Group("/ai")
 	aiGroup.POST("/suggest-title", aiHandler.SuggestTitles)
 	aiGroup.POST("/improve-description", aiHandler.ImproveDescription)
-	// Resultado: POST /api/ai/suggest-title
 
 	// ===== TASKS =====
 	tasksGroup := protected.Group("/tasks")
@@ -50,7 +49,7 @@ func RegisterRoutes(r *gin.Engine) {
 	// SEARCH (com cache Redis) -> /api/tasks/search
 	tasksGroup.GET("/search", tasks.SearchTasksHandler)
 
-	// HISTORY -> /api/tasks/search/history  ✅ (corrigido)
+	// HISTORY -> /api/tasks/search/history
 	tasksGroup.GET("/search/history", tasks.GetSearchHistoryHandler)
 
 	// GET por ID -> /api/tasks/:id

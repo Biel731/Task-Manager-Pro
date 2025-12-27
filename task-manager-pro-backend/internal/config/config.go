@@ -21,6 +21,6 @@ func Load() {
 	JWTSecret = os.Getenv("JWT_SECRET")
 
 	if DatabaseUrl == "" || RedisURL == "" || JWTSecret == "" {
-		log.Fatal("❌ Missing environment variables")
+		log.Fatal("Missing environment variables")
 	}
 }
