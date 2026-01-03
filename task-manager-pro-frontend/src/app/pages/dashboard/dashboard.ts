@@ -331,7 +331,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   // =========================
   // IA actions (2 features)
   // =========================
-  onSuggestTitle(target: AiTarget): void {
+  onSuggestTitle(target: 'create' | 'edit'): void {
     if (this.aiLoading) return;
 
     this.aiError = '';
@@ -339,21 +339,37 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     const desc = (form.get('description')?.value ?? '').toString().trim();
     if (desc.length < 10) {
-      this.aiError =
-        'Escreva uma descrição (mín. 10 caracteres) para gerar títulos.';
+      this.aiError = 'Escreva uma descrição (mín. 10 caracteres) para gerar títulos.';
       return;
     }
 
     this.aiLoading = true;
-    this.ai.suggestTitle(desc).pipe(finalize(() => (this.aiLoading = false))).subscribe({
-      next: (res) => {
-        this.aiTitleOptions = res?.titles || [];
-        this.openAiModal('titles', target);
-      },
-      error: () => {
-        this.aiError = 'Falha ao sugerir títulos.';
-      },
-    });
+
+    this.ai
+      .suggestTitle(desc)
+      .pipe(
+        finalize(() => {
+          this.zone.run(() => {
+            this.aiLoading = false;
+            this.cdr.detectChanges();
+          });
+        })
+      )
+      .subscribe({
+        next: (res) => {
+          this.zone.run(() => {
+            this.aiTitleOptions = res?.titles || [];
+            this.openAiModal('titles', target);
+            this.cdr.detectChanges();
+          });
+        },
+        error: () => {
+          this.zone.run(() => {
+            this.aiError = 'Falha ao sugerir títulos.';
+            this.cdr.detectChanges();
+          });
+        },
+      });
   }
 
   applyTitle(title: string): void {
@@ -362,7 +378,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.closeAiModal();
   }
 
-  onImproveDescription(target: AiTarget): void {
+  onImproveDescription(target: 'create' | 'edit'): void {
     if (this.aiLoading) return;
 
     this.aiError = '';
@@ -372,27 +388,42 @@ export class DashboardComponent implements OnInit, OnDestroy {
     const desc = (form.get('description')?.value ?? '').toString().trim();
 
     if (title.length < 3) {
-      this.aiError =
-        'Preencha o título (mín. 3 caracteres) para melhorar a descrição.';
+      this.aiError = 'Preencha o título (mín. 3 caracteres) para melhorar a descrição.';
       return;
     }
     if (desc.length < 10) {
-      this.aiError =
-        'Preencha a descrição (mín. 10 caracteres) para melhorar.';
+      this.aiError = 'Preencha a descrição (mín. 10 caracteres) para melhorar.';
       return;
     }
 
     this.aiLoading = true;
-    this.ai.improveDescription(title, desc).pipe(finalize(() => (this.aiLoading = false))).subscribe({
-      next: (res) => {
-        this.aiImprovedText = res?.improved_description || '';
-        this.aiImprovedBullets = res?.bullets || [];
-        this.openAiModal('improve', target);
-      },
-      error: () => {
-        this.aiError = 'Falha ao melhorar a descrição.';
-      },
-    });
+
+    this.ai
+      .improveDescription(title, desc)
+      .pipe(
+        finalize(() => {
+          this.zone.run(() => {
+            this.aiLoading = false;
+            this.cdr.detectChanges();
+          });
+        })
+      )
+      .subscribe({
+        next: (res) => {
+          this.zone.run(() => {
+            this.aiImprovedText = res?.improved_description || '';
+            this.aiImprovedBullets = res?.bullets || [];
+            this.openAiModal('improve', target);
+            this.cdr.detectChanges();
+          });
+        },
+        error: () => {
+          this.zone.run(() => {
+            this.aiError = 'Falha ao melhorar a descrição.';
+            this.cdr.detectChanges();
+          });
+        },
+      });
   }
 
   applyImprovedDescription(): void {
