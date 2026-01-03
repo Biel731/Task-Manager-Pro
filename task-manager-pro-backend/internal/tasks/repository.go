@@ -154,17 +154,18 @@ func ListTasks(userID uint, filter TaskFilter) ([]Task, error) {
 
 	// 🔍 Query: busca em title, description E tags.name
 	if filter.Query != "" {
-		q := "%" + filter.Query + "%"
+		q := "%" + strings.TrimSpace(filter.Query) + "%"
 
-		// LEFT JOIN para permitir buscar tags sem excluir tasks que não tenham tags
 		db = db.
 			Joins("LEFT JOIN task_tags ON task_tags.task_id = tasks.id").
 			Joins("LEFT JOIN tags ON tags.id = task_tags.tag_id").
 			Where(`
-					tasks.title ILIKE ?
-					OR tasks.description ILIKE ?
-					OR tags.name ILIKE ?
-				`, q, q, q).
+      (
+        tasks.title ILIKE ?
+        OR tasks.description ILIKE ?
+        OR tags.name ILIKE ?
+      )
+    `, q, q, q).
 			Group("tasks.id")
 	}
 
