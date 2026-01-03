@@ -1,5 +1,8 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { finalize } from 'rxjs/operators';
+import { ChangeDetectorRef, NgZone } from '@angular/core';
+
 import {
   ReactiveFormsModule,
   FormBuilder,
@@ -33,7 +36,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
   tasks: Task[] = [];
   history: string[] = [];
 
-  loading = false;
+  // ✅ loaders separados
+  tasksLoading = false;   // só para LISTA (e só quando você quiser mostrar)
+  actionLoading = false;  // criar/editar/deletar/buscar
+
   errorMsg = '';
 
   editingId: number | null = null;
@@ -62,7 +68,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
     private taskService: TaskService,
     private auth: AuthService,
     private router: Router,
-    private ai: AiService
+    private ai: AiService,
+    private zone: NgZone,
+    private cdr: ChangeDetectorRef
   ) {
     this.createForm = this.fb.group({
       title: ['', [Validators.required, Validators.minLength(2)]],
@@ -84,7 +92,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.loadTasks();
+    // this.loadTasks(true); // se quiser carregar ao entrar e mostrar loader, descomenta
     this.loadHistory();
 
     this.searchForm
@@ -97,7 +105,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
       .subscribe((q) => {
         const value = (q ?? '').trim();
         if (!value) {
-          this.loadTasks();
+          // ✅ quando limpa o campo (automático), recarrega SEM mostrar "Carregando..."
+          this.loadTasks(false);
           return;
         }
         this.search(value);
@@ -135,27 +144,45 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   // =========================
-  // LOADERS
+  // LISTA
   // =========================
-  loadTasks(): void {
-    this.loading = true;
+  /**
+   * showSpinner = true  -> mostra "Carregando..." (uso do botão Atualizar)
+   * showSpinner = false -> não mostra "Carregando..." (fluxos automáticos)
+   */
+  loadTasks(showSpinner: boolean = true): void {
+    if (showSpinner) this.tasksLoading = true;
     this.errorMsg = '';
 
-    this.taskService.getTasks().subscribe({
+    this.taskService.getTasks().pipe(
+      finalize(() => {
+        // garante atualização visual
+        this.zone.run(() => {
+          this.tasksLoading = false;
+          this.cdr.detectChanges();
+        });
+      })
+    ).subscribe({
       next: (tasks) => {
-        this.tasks = tasks;
-        this.loading = false;
+        this.zone.run(() => {
+          this.tasks = tasks || [];
+          this.cdr.detectChanges();
+        });
       },
       error: () => {
-        this.errorMsg = 'Erro ao carregar tasks.';
-        this.loading = false;
+        this.zone.run(() => {
+          this.errorMsg = 'Erro ao carregar tasks.';
+          this.tasks = [];
+          this.cdr.detectChanges();
+        });
       },
     });
   }
 
+
   loadHistory(): void {
     this.taskService.getSearchHistory().subscribe({
-      next: (items) => (this.history = items),
+      next: (items) => (this.history = items || []),
       error: () => (this.history = []),
     });
   }
@@ -166,34 +193,33 @@ export class DashboardComponent implements OnInit, OnDestroy {
   onCreate(): void {
     if (this.createForm.invalid) return;
 
-    this.loading = true;
+    this.actionLoading = true;
     this.errorMsg = '';
 
     const payload = this.createForm.value;
 
-    this.taskService.createTask(payload).subscribe({
-      next: () => {
-        this.createForm.reset({
-          title: '',
-          description: '',
-          status: 'TODO',
-          priority: 'MEDIUM',
-        });
+    this.taskService
+      .createTask(payload)
+      .pipe(finalize(() => (this.actionLoading = false)))
+      .subscribe({
+        next: () => {
+          this.createForm.reset({
+            title: '',
+            description: '',
+            status: 'TODO',
+            priority: 'MEDIUM',
+          });
 
-        // limpa qualquer estado de IA
-        this.resetAiState();
+          this.resetAiState();
 
-        const q = (this.searchForm.get('q')?.value ?? '').trim();
-        if (q) this.search(q);
-        else this.loadTasks();
-
-        this.loading = false;
-      },
-      error: () => {
-        this.errorMsg = 'Erro ao criar task.';
-        this.loading = false;
-      },
-    });
+          const q = (this.searchForm.get('q')?.value ?? '').trim();
+          if (q) this.search(q);
+          else this.loadTasks(false); // ✅ sem spinner
+        },
+        error: () => {
+          this.errorMsg = 'Erro ao criar task.';
+        },
+      });
   }
 
   startEdit(t: Task): void {
@@ -206,7 +232,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
       priority: t.priority ?? 'MEDIUM',
     });
 
-    // limpa qualquer estado de IA
     this.resetAiState();
   }
 
@@ -219,66 +244,78 @@ export class DashboardComponent implements OnInit, OnDestroy {
   saveEdit(id: number): void {
     if (this.editForm.invalid) return;
 
-    this.loading = true;
+    this.actionLoading = true;
     this.errorMsg = '';
 
-    this.taskService.updateTask(id, this.editForm.value).subscribe({
-      next: () => {
-        this.editingId = null;
+    this.taskService
+      .updateTask(id, this.editForm.value)
+      .pipe(finalize(() => (this.actionLoading = false)))
+      .subscribe({
+        next: () => {
+          this.editingId = null;
+          this.resetAiState();
 
-        // limpa qualquer estado de IA
-        this.resetAiState();
-
-        const q = (this.searchForm.get('q')?.value ?? '').trim();
-        if (q) this.search(q);
-        else this.loadTasks();
-
-        this.loading = false;
-      },
-      error: () => {
-        this.errorMsg = 'Erro ao atualizar task.';
-        this.loading = false;
-      },
-    });
+          const q = (this.searchForm.get('q')?.value ?? '').trim();
+          if (q) this.search(q);
+          else this.loadTasks(false); // ✅ sem spinner
+        },
+        error: () => {
+          this.errorMsg = 'Erro ao atualizar task.';
+        },
+      });
   }
 
   deleteTask(id: number): void {
-    this.loading = true;
+    this.actionLoading = true;
     this.errorMsg = '';
 
-    this.taskService.deleteTask(id).subscribe({
-      next: () => {
-        const q = (this.searchForm.get('q')?.value ?? '').trim();
-        if (q) this.search(q);
-        else this.loadTasks();
-
-        this.loading = false;
-      },
-      error: () => {
-        this.errorMsg = 'Erro ao deletar task.';
-        this.loading = false;
-      },
-    });
+    this.taskService
+      .deleteTask(id)
+      .pipe(finalize(() => (this.actionLoading = false)))
+      .subscribe({
+        next: () => {
+          const q = (this.searchForm.get('q')?.value ?? '').trim();
+          if (q) this.search(q);
+          else this.loadTasks(false); // ✅ sem spinner
+        },
+        error: () => {
+          this.errorMsg = 'Erro ao deletar task.';
+        },
+      });
   }
 
   // =========================
   // SEARCH (Redis)
   // =========================
   search(q: string): void {
-    this.loading = true;
+    this.actionLoading = true;
     this.errorMsg = '';
 
-    this.taskService.searchTasks(q).subscribe({
-      next: (tasks) => {
-        this.tasks = tasks;
-        this.loading = false;
-        this.loadHistory();
-      },
-      error: () => {
-        this.errorMsg = 'Erro ao buscar tasks.';
-        this.loading = false;
-      },
-    });
+    this.taskService
+      .searchTasks(q)
+      .pipe(
+        finalize(() => {
+          this.zone.run(() => {
+            this.actionLoading = false;
+            this.cdr.detectChanges();
+          });
+        })
+      )
+      .subscribe({
+        next: (tasks) => {
+          this.zone.run(() => {
+            this.tasks = tasks || [];
+            this.loadHistory();
+            this.cdr.detectChanges();
+          });
+        },
+        error: () => {
+          this.zone.run(() => {
+            this.errorMsg = 'Erro ao buscar tasks.';
+            this.cdr.detectChanges();
+          });
+        },
+      });
   }
 
   clickHistory(item: string): void {
@@ -287,7 +324,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   clearSearch(): void {
     this.searchForm.patchValue({ q: '' }, { emitEvent: true });
-    this.loadTasks();
+    this.loadTasks(false); // ✅ sem spinner
     this.loadHistory();
   }
 
@@ -308,15 +345,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
 
     this.aiLoading = true;
-    this.ai.suggestTitle(desc).subscribe({
+    this.ai.suggestTitle(desc).pipe(finalize(() => (this.aiLoading = false))).subscribe({
       next: (res) => {
         this.aiTitleOptions = res?.titles || [];
         this.openAiModal('titles', target);
-        this.aiLoading = false;
       },
       error: () => {
         this.aiError = 'Falha ao sugerir títulos.';
-        this.aiLoading = false;
       },
     });
   }
@@ -348,16 +383,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
 
     this.aiLoading = true;
-    this.ai.improveDescription(title, desc).subscribe({
+    this.ai.improveDescription(title, desc).pipe(finalize(() => (this.aiLoading = false))).subscribe({
       next: (res) => {
         this.aiImprovedText = res?.improved_description || '';
         this.aiImprovedBullets = res?.bullets || [];
         this.openAiModal('improve', target);
-        this.aiLoading = false;
       },
       error: () => {
         this.aiError = 'Falha ao melhorar a descrição.';
-        this.aiLoading = false;
       },
     });
   }

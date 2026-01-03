@@ -19,8 +19,18 @@
         </div>
 
         <div class="col right">
-          <button class="btn ghost" type="button" (click)="clearSearch()">Limpar</button>
-          <button class="btn" type="button" (click)="loadTasks()">Atualizar</button>
+          <button
+            class="btn ghost"
+            type="button"
+            (click)="clearSearch()"
+            [disabled]="actionLoading"
+          >
+            Limpar
+          </button>
+          <!-- Aqui, atualizar é só lista e pode mostrar o "Carregando..." -->
+          <button class="btn" type="button" (click)="loadTasks(true)" [disabled]="tasksLoading">
+            {{ tasksLoading ? 'Atualizando...' : 'Atualizar' }}
+          </button>
         </div>
       </div>
     </form>
@@ -35,6 +45,7 @@
           type="button"
           (click)="clickHistory(h)"
           title="Clique para buscar"
+          [disabled]="actionLoading"
         >
           {{ h }}
         </button>
@@ -61,7 +72,7 @@
           class="btn small ghost"
           type="button"
           (click)="onSuggestTitle('create')"
-          [disabled]="aiLoading"
+          [disabled]="aiLoading || actionLoading"
         >
           ✨ Sugerir título
         </button>
@@ -70,7 +81,7 @@
           class="btn small ghost"
           type="button"
           (click)="onImproveDescription('create')"
-          [disabled]="aiLoading"
+          [disabled]="aiLoading || actionLoading"
         >
           ✨ Melhorar descrição
         </button>
@@ -99,8 +110,8 @@
         </div>
 
         <div class="col right">
-          <button class="btn" type="submit" [disabled]="loading || createForm.invalid">
-            {{ loading ? 'Criando...' : 'Criar' }}
+          <button class="btn" type="submit" [disabled]="actionLoading || createForm.invalid">
+            {{ actionLoading ? 'Criando...' : 'Criar' }}
           </button>
         </div>
       </div>
@@ -111,93 +122,126 @@
   <div class="card">
     <div class="listHeader">
       <h2>Lista</h2>
-      <button class="btn ghost" type="button" (click)="loadTasks()">Atualizar</button>
+
+      <!-- botão de atualizar só lista -->
+      <button class="btn ghost" type="button" (click)="loadTasks(true)" [disabled]="tasksLoading">
+        {{ tasksLoading ? 'Atualizando...' : 'Atualizar' }}
+      </button>
     </div>
 
-    <p *ngIf="loading">Carregando...</p>
+    <!-- ✅ aparece só quando você clica em Atualizar -->
+    <p *ngIf="tasksLoading">Carregando...</p>
 
-    <div class="task" *ngFor="let t of tasks">
-      <div class="taskTop">
-        <strong>{{ t.title }}</strong>
+    <!-- lista só quando não está carregando -->
+    <ng-container *ngIf="!tasksLoading">
+      <div class="task" *ngFor="let t of tasks">
+        <div class="taskTop">
+          <strong>{{ t.title }}</strong>
 
-        <div class="actions" *ngIf="editingId !== t.id">
-          <button class="btn small" type="button" (click)="startEdit(t)">Editar</button>
-          <button class="btn small danger" type="button" (click)="deleteTask(t.id)">Deletar</button>
+          <div class="actions" *ngIf="editingId !== t.id">
+            <button
+              class="btn small"
+              type="button"
+              (click)="startEdit(t)"
+              [disabled]="actionLoading"
+            >
+              Editar
+            </button>
+            <button
+              class="btn small danger"
+              type="button"
+              (click)="deleteTask(t.id)"
+              [disabled]="actionLoading"
+            >
+              Deletar
+            </button>
+          </div>
         </div>
+
+        <ng-container *ngIf="editingId !== t.id; else editTpl">
+          <div class="badges">
+            <span class="badge">{{ t.status }}</span>
+            <span class="badge">{{ t.priority }}</span>
+          </div>
+
+          <p class="desc" *ngIf="t.description">{{ t.description }}</p>
+        </ng-container>
+
+        <ng-template #editTpl>
+          <form class="editForm" [formGroup]="editForm" (ngSubmit)="saveEdit(t.id)">
+            <label>Título</label>
+            <input formControlName="title" />
+
+            <label>Descrição</label>
+            <input formControlName="description" />
+
+            <!-- IA Actions (Edit) -->
+            <div class="ai-actions" style="margin-top: 10px">
+              <button
+                class="btn small ghost"
+                type="button"
+                (click)="onSuggestTitle('edit')"
+                [disabled]="aiLoading || actionLoading"
+              >
+                ✨ Sugerir título
+              </button>
+
+              <button
+                class="btn small ghost"
+                type="button"
+                (click)="onImproveDescription('edit')"
+                [disabled]="aiLoading || actionLoading"
+              >
+                ✨ Melhorar descrição
+              </button>
+
+              <span *ngIf="aiLoading" style="opacity: 0.85">Gerando...</span>
+              <span *ngIf="aiError" style="color: #ff6b6b">{{ aiError }}</span>
+            </div>
+
+            <div class="row">
+              <div class="col">
+                <label>Status</label>
+                <select formControlName="status">
+                  <option value="TODO">TODO</option>
+                  <option value="DOING">DOING</option>
+                  <option value="DONE">DONE</option>
+                </select>
+              </div>
+
+              <div class="col">
+                <label>Prioridade</label>
+                <select formControlName="priority">
+                  <option value="LOW">LOW</option>
+                  <option value="MEDIUM">MEDIUM</option>
+                  <option value="HIGH">HIGH</option>
+                </select>
+              </div>
+
+              <div class="col right">
+                <button
+                  class="btn small"
+                  type="submit"
+                  [disabled]="actionLoading || editForm.invalid"
+                >
+                  {{ actionLoading ? 'Salvando...' : 'Salvar' }}
+                </button>
+                <button
+                  class="btn small ghost"
+                  type="button"
+                  (click)="cancelEdit()"
+                  [disabled]="actionLoading"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          </form>
+        </ng-template>
       </div>
 
-      <ng-container *ngIf="editingId !== t.id; else editTpl">
-        <div class="badges">
-          <span class="badge">{{ t.status }}</span>
-          <span class="badge">{{ t.priority }}</span>
-        </div>
-
-        <p class="desc" *ngIf="t.description">{{ t.description }}</p>
-      </ng-container>
-
-      <ng-template #editTpl>
-        <form class="editForm" [formGroup]="editForm" (ngSubmit)="saveEdit(t.id)">
-          <label>Título</label>
-          <input formControlName="title" />
-
-          <label>Descrição</label>
-          <input formControlName="description" />
-
-          <!-- IA Actions (Edit) -->
-          <div class="ai-actions" style="margin-top: 10px">
-            <button
-              class="btn small ghost"
-              type="button"
-              (click)="onSuggestTitle('edit')"
-              [disabled]="aiLoading"
-            >
-              ✨ Sugerir título
-            </button>
-
-            <button
-              class="btn small ghost"
-              type="button"
-              (click)="onImproveDescription('edit')"
-              [disabled]="aiLoading"
-            >
-              ✨ Melhorar descrição
-            </button>
-
-            <span *ngIf="aiLoading" style="opacity: 0.85">Gerando...</span>
-            <span *ngIf="aiError" style="color: #ff6b6b">{{ aiError }}</span>
-          </div>
-
-          <div class="row">
-            <div class="col">
-              <label>Status</label>
-              <select formControlName="status">
-                <option value="TODO">TODO</option>
-                <option value="DOING">DOING</option>
-                <option value="DONE">DONE</option>
-              </select>
-            </div>
-
-            <div class="col">
-              <label>Prioridade</label>
-              <select formControlName="priority">
-                <option value="LOW">LOW</option>
-                <option value="MEDIUM">MEDIUM</option>
-                <option value="HIGH">HIGH</option>
-              </select>
-            </div>
-
-            <div class="col right">
-              <button class="btn small" type="submit" [disabled]="loading || editForm.invalid">
-                Salvar
-              </button>
-              <button class="btn small ghost" type="button" (click)="cancelEdit()">Cancelar</button>
-            </div>
-          </div>
-        </form>
-      </ng-template>
-    </div>
-
-    <p *ngIf="!loading && tasks.length === 0">Nenhuma task encontrada.</p>
+      <p *ngIf="tasks.length === 0">Nenhuma task encontrada.</p>
+    </ng-container>
   </div>
 
   <!-- ===== IA MODAL (shared) ===== -->
@@ -224,7 +268,6 @@
               justify-content: space-between;
               gap: 12px;
               padding: 10px;
-              border: 1px solid rgba(255, 255, 255, 0.12);
               border-radius: 10px;
               margin-bottom: 10px;
             "
